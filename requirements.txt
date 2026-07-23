@@ -1,0 +1,8 @@
+fastapi==0.139.2
+uvicorn==0.51.0
+torch==2.13.0
+transformers==5.14.1
+pydantic==2.13.4
+psycopg2-binary==2.9.12
+beautifulsoup4==4.12.3
+requests==2.32.3
