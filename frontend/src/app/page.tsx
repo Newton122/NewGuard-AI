@@ -108,85 +108,92 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-slate-100 relative">
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10">
-        {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-[#0a0a0f] to-slate-900" />
-        
-        {/* Grid pattern */}
-        <div className="absolute inset-0 bg-grid opacity-30" />
-        
-        {/* Animated orbs */}
-        <div className="absolute top-20 left-10 h-96 w-96 animate-float rounded-full bg-blue-600/20 blur-3xl" />
-        <div className="absolute top-40 right-20 h-80 w-80 animate-float rounded-full bg-purple-600/15 blur-3xl" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-20 left-1/3 h-72 w-72 animate-float rounded-full bg-emerald-600/10 blur-3xl" style={{ animationDelay: '4s' }} />
-        <div className="absolute top-1/2 right-1/4 h-64 w-64 animate-float rounded-full bg-pink-600/10 blur-3xl" style={{ animationDelay: '1s' }} />
-        
-        {/* Floating particles */}
-        <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute h-1 w-1 animate-pulse rounded-full bg-white/20"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${3 + Math.random() * 4}s`
-              }}
-            />
-          ))}
-        </div>
+      {/* Code Background Image */}
+      <div className="fixed inset-0 -z-20">
+        <img
+          src="/images/code-background.svg"
+          alt="Code background"
+          className="h-full w-full object-cover opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0f]/90 via-[#0a0a0f]/80 to-slate-900/90" />
       </div>
 
-      {/* Mouse follower */}
-      <div
-        className="fixed pointer-events-none z-0 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl transition-all duration-1000 ease-out"
-        style={{
-          left: mousePosition.x,
-          top: mousePosition.y,
-        }}
-      />
+      {/* Animated Background */}
+      <div className="fixed inset-0 -z-10">
+         {/* Grid pattern */}
+         <div className="absolute inset-0 bg-grid opacity-20" />
+         
+         {/* Animated orbs - CYAN/BLUE only, NO PURPLE */}
+         <div className="absolute top-20 left-10 h-96 w-96 animate-float rounded-full bg-cyan-600/20 blur-3xl" />
+         <div className="absolute top-40 right-20 h-80 w-80 animate-float rounded-full bg-blue-600/15 blur-3xl" style={{ animationDelay: '2s' }} />
+         <div className="absolute bottom-20 left-1/3 h-72 w-72 animate-float rounded-full bg-teal-600/10 blur-3xl" style={{ animationDelay: '4s' }} />
+         <div className="absolute top-1/2 right-1/4 h-64 w-64 animate-float rounded-full bg-sky-600/10 blur-3xl" style={{ animationDelay: '1s' }} />
+         
+         {/* Floating particles */}
+         <div className="absolute inset-0">
+           {[...Array(20)].map((_, i) => (
+             <div
+               key={i}
+               className="absolute h-1 w-1 animate-pulse rounded-full bg-cyan-400/30"
+               style={{
+                 left: `${Math.random() * 100}%`,
+                 top: `${Math.random() * 100}%`,
+                 animationDelay: `${Math.random() * 5}s`,
+                 animationDuration: `${3 + Math.random() * 4}s`
+               }}
+             />
+           ))}
+         </div>
+       </div>
 
-      {/* Header */}
-      <header className="relative z-50 border-b border-slate-800/30 glass">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <a href="/" className="flex items-center gap-3 group">
-            <div className="relative flex h-12 w-12 items-center justify-center">
-              <div className="absolute inset-0 animate-ping rounded-full bg-blue-500/30" />
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30 transition-transform duration-300 group-hover:scale-110">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                </svg>
-              </div>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
-                NewsGuard AI
-              </h1>
-              <p className="text-xs text-slate-400">Multi-Signal Detection</p>
-            </div>
-          </a>
-          <nav className="hidden gap-8 text-sm font-medium text-slate-300 md:flex">
-            <a href="#detector" className="group relative transition hover:text-white">
-              Detector
-              <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-all group-hover:w-full" />
-            </a>
-            <a href="#how-it-works" className="group relative transition hover:text-white">
-              How It Works
-              <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-all group-hover:w-full" />
-            </a>
-            <a href="/about" className="group relative transition hover:text-white">
-              About
-              <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-all group-hover:w-full" />
-            </a>
-            <a href="/history" className="group relative transition hover:text-white">
-              History
-              <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-all group-hover:w-full" />
-            </a>
-          </nav>
-        </div>
-      </header>
+       {/* Mouse follower - CYAN instead of purple */}
+       <div
+         className="fixed pointer-events-none z-0 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-3xl transition-all duration-1000 ease-out"
+         style={{
+           left: mousePosition.x,
+           top: mousePosition.y,
+         }}
+       />
+
+       {/* Header */}
+       <header className="relative z-50 border-b border-slate-800/30 glass">
+         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+           <a href="/" className="flex items-center gap-3 group">
+             <div className="relative flex h-12 w-12 items-center justify-center">
+               <div className="absolute inset-0 animate-ping rounded-full bg-cyan-500/30" />
+               <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 shadow-lg shadow-cyan-500/30 transition-transform duration-300 group-hover:scale-110">
+                 <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                 </svg>
+               </div>
+             </div>
+             <div>
+               <h1 className="text-xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
+                 NewsGuard AI
+               </h1>
+               <p className="text-xs text-slate-400">Multi-Signal Detection</p>
+             </div>
+           </a>
+           <nav className="hidden gap-8 text-sm font-medium text-slate-300 md:flex">
+             <a href="#detector" className="group relative transition hover:text-white">
+               Detector
+               <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all group-hover:w-full" />
+             </a>
+             <a href="#how-it-works" className="group relative transition hover:text-white">
+               How It Works
+               <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all group-hover:w-full" />
+             </a>
+             <a href="/about" className="group relative transition hover:text-white">
+               About
+               <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all group-hover:w-full" />
+             </a>
+             <a href="/history" className="group relative transition hover:text-white">
+               History
+               <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all group-hover:w-full" />
+             </a>
+           </nav>
+         </div>
+       </header>
 
       {/* Hero */}
       <section className="relative z-10 border-b border-slate-800/30">
@@ -211,7 +218,7 @@ export default function Home() {
           <div className="mt-12 flex justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
             <a
               href="#detector"
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-8 py-4 font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-2">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -305,7 +312,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={loading || (!text.trim() && !url.trim())}
-                  className="btn-primary w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 font-semibold text-white shadow-lg shadow-blue-500/30 disabled:cursor-not-allowed disabled:opacity-50 hover:shadow-xl hover:shadow-purple-500/40"
+                  className="btn-primary w-full overflow-hidden rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 font-semibold text-white shadow-lg shadow-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50 hover:shadow-xl hover:shadow-blue-500/40"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {loading ? (
@@ -380,11 +387,11 @@ export default function Home() {
                         <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000" style={{ width: `${result.source_score * 100}%` }} />
                       </div>
                     </div>
-                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 text-center transition-all duration-300 hover:border-purple-500/30 hover:scale-105">
+                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 text-center transition-all duration-300 hover:border-cyan-500/30 hover:scale-105">
                       <p className="text-xs text-slate-400">Heuristic Score</p>
                       <p className="text-xl font-bold text-white">{(result.heuristic_score * 100).toFixed(0)}%</p>
                       <div className="mt-2 h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                        <div className="h-1.5 rounded-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-1000" style={{ width: `${result.heuristic_score * 100}%` }} />
+                        <div className="h-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000" style={{ width: `${result.heuristic_score * 100}%` }} />
                       </div>
                     </div>
                   </div>
@@ -395,7 +402,7 @@ export default function Home() {
                       <p className="text-xs text-slate-400">Detected Topic</p>
                       <p className="mt-1 text-sm font-semibold text-white">{result.topic}</p>
                     </div>
-                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 transition hover:border-purple-500/20">
+                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 transition hover:border-cyan-500/20">
                       <p className="text-xs text-slate-400">Entities Detected</p>
                       <p className="mt-1 text-sm font-semibold text-white">
                         {result.entities.length > 0 ? result.entities.slice(0, 3).join(', ') : 'None detected'}
@@ -504,7 +511,7 @@ export default function Home() {
                 title: 'Multi-Signal Analysis',
                 description: 'BERT evaluates language patterns, heuristics flag suspicious wording, and source credibility is checked.',
                 icon: Search,
-                color: 'purple'
+                color: 'cyan'
               },
               {
                 step: '03',
@@ -569,7 +576,7 @@ export default function Home() {
               </p>
             </div>
             <div className="group rounded-2xl glass p-8 transition-all duration-300 hover:scale-105 card-hover">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-purple-600/10 text-purple-400 transition-colors group-hover:bg-purple-600/20">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-600/10 text-cyan-400 transition-colors group-hover:bg-cyan-600/20">
                 <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.502.037-.963.134-1.383.299a2.25 2.25 0 00-1.591.659L5 14.5m0 0L2.25 12.75M5 14.5h13.5m0 0l3.75-3.75M18.75 14.5H5.25" />
                 </svg>
@@ -590,7 +597,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 py-12">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <a href="/" className="flex items-center gap-3 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30 transition-transform duration-300 group-hover:scale-110">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 shadow-lg shadow-cyan-500/30 transition-transform duration-300 group-hover:scale-110">
                 <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#grad)"/>
+  <g fill="none" stroke="#1e293b" stroke-width="1" opacity="0.4">
+    <line x1="0" y1="200" x2="1920" y2="200"/>
+    <line x1="0" y1="400" x2="1920" y2="400"/>
+    <line x1="0" y1="600" x2="1920" y2="600"/>
+    <line x1="0" y1="800" x2="1920" y2="800"/>
+    <line x1="300" y1="0" x2="300" y2="1080"/>
+    <line x1="600" y1="0" x2="600" y2="1080"/>
+    <line x1="900" y1="0" x2="900" y2="1080"/>
+    <line x1="1200" y1="0" x2="1200" y2="1080"/>
+    <line x1="1500" y1="0" x2="1500" y2="1080"/>
+  </g>
+  <g font-family="monospace" font-size="14" fill="#334155" opacity="0.3">
+    <text x="40" y="220">import torch</text>
+    <text x="40" y="250">from transformers import AutoTokenizer</text>
+    <text x="40" y="280">model = AutoModel.from_pretrained("bert-base-uncased")</text>
+    <text x="40" y="310">tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")</text>
+    <text x="40" y="340">inputs = tokenizer(text, return_tensors="pt")</text>
+    <text x="40" y="370">outputs = model(**inputs)</text>
+    <text x="40" y="400">logits = outputs.logits</text>
+    <text x="40" y="430">probs = torch.softmax(logits, dim=-1)</text>
+    <text x="40" y="460">prediction = torch.argmax(probs, dim=-1)</text>
+    <text x="40" y="490">print(f"Predicted: {prediction}")</text>
+    <text x="40" y="520">" "</text>
+    <text x="40" y="620"># Multi-signal analysis pipeline</text>
+    <text x="40" y="650">bert_score = model.predict(text)</text>
+    <text x="40" y="680">source_score = check_credibility(url)</text>
+    <text x="40" y="710">heuristic_score = analyze_heuristics(text)</text>
+    <text x="40" y="740">final_score = (bert * 0.7 + source * 0.15 + heur * 0.15)</text>
+    <text x="40" y="770">return {"prediction": final_score}</text>
+    <text x="40" y="820">" "</text>
+    <text x="40" y="920"># Neural network layers</text>
+    <text x="40" y="950">classifier = nn.Sequential(</text>
+    <text x="60" y="980">nn.Linear(768, 256),</text>
+    <text x="60" y="1010">nn.ReLU(),</text>
+    <text x="60" y="1040">nn.Dropout(0.1),</text>
+    <text x="60" y="1070">nn.Linear(256, 2)</text>
+    <text x="40" y="1100">)</text>
+  </g>
+  <g font-family="monospace" font-size="12" fill="#1e293b" opacity="0.25">
+    <text x="350" y="220">const analyze = async (text) => {</text>
+    <text x="380" y="250">const response = await fetch('/api/predict', {</text>
+    <text x="380" y="280">method: 'POST',</text>
+    <text x="380" y="310">body: JSON.stringify({ text, source, url })</text>
+    <text x="380" y="340">});</text>
+    <text x="380" y="370">const data = await response.json();</text>
+    <text x="380" y="400">return data;</text>
+    <text x="350" y="430">};</text>
+    <text x="350" y="460">" "</text>
+    <text x="350" y="550">// BERT Transformer Architecture</text>
+    <text x="350" y="580">embedding = tokenizer.encode(text)</text>
+    <text x="350" y="610">attention = multi_head_attention(embedding)</text>
+    <text x="350" y="640">feed_forward = transformer_block(attention)</text>
+    <text x="350" y="670">output = classifier(feed_forward)</text>
+    <text x="350" y="700">prediction = softmax(output)</text>
+  </g>
+  <circle cx="1700" cy="200" r="150" fill="none" stroke="#1e3a8a" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="1700" cy="200" r="100" fill="none" stroke="#1e3a8a" stroke-width="0.5" opacity="0.2"/>
+  <circle cx="200" cy="900" r="200" fill="none" stroke="#164e63" stroke-width="0.5" opacity="0.2"/>
+</svg>
