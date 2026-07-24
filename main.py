@@ -5,6 +5,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import os
 import re
+import json
 import requests
 from bs4 import BeautifulSoup
 from typing import Optional, List, Dict
@@ -69,7 +70,7 @@ def get_db_connection():
             host="localhost",
             database="news_detection",
             user="newton",
-            password="",
+            password="newton",
             cursor_factory=RealDictCursor
         )
         return conn
@@ -112,7 +113,7 @@ def save_prediction(title: str, content: str, prediction: str, confidence: float
             cur.execute("""
                 INSERT INTO predictions (title, content, prediction, confidence, risk_level, explanation, entities, topic)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (title, content, prediction, confidence, risk_level, explanation, entities, topic))
+            """, (title, content, prediction, confidence, risk_level, json.dumps(explanation), json.dumps(entities), topic))
             conn.commit()
             cur.close()
             conn.close()
