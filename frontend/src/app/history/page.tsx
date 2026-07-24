@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Navigation } from '../components/navigation'
+import { Clock } from 'lucide-react'
 
 type HistoryItem = {
   title: string | null
@@ -80,9 +81,7 @@ export default async function HistoryPage() {
             <div>
               {history.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-700/50 bg-slate-950/20 p-16 text-center">
-                  <svg className="mx-auto h-16 w-16 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <Clock className="mx-auto h-16 w-16 text-slate-700" />
                   <h3 className="mt-4 text-lg font-semibold text-white">No history yet</h3>
                   <p className="mt-2 text-sm text-slate-400">
                     Start analyzing articles to build your verification history.
