@@ -2,6 +2,21 @@
 
 Fake news detection web app: a FastAPI backend (BERT model + linguistic heuristics + source credibility) and a Next.js frontend.
 
+## Models used
+
+Each article is scored by three signals, which are combined into one credibility score:
+
+| Signal | Model / method | Weight |
+|--------|----------------|--------|
+| Deep learning | [`Pulk17/Fake-News-Detection`](https://huggingface.co/Pulk17/Fake-News-Detection): a `bert-base-uncased` model (BERT, 12 layers) fine-tuned for real/fake news classification, run with PyTorch + Hugging Face Transformers | 70% |
+| Source credibility | Rule-based check of the source name and URL domain against lists of trusted outlets and known satire/fake sites | 15% |
+| Linguistic heuristics | Rule-based scoring of emotional and sensational wording, conspiracy phrases, excessive caps and exclamation marks | 15% |
+
+- **Combined score ≥ 0.6:** "True News"; below that, the article is flagged as likely fake.
+- **Risk level:** Low (≥ 0.7), Medium (0.4–0.7), High (< 0.4).
+
+The app also extracts named entities, the topic and key terms for display.
+
 ## Requirements
 - Python 3.10+
 - Node.js 20+
