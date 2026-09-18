@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { FileText, Search, BarChart3, Shield, Globe, History, Zap } from 'lucide-react'
 
 type PredictionResult = {
@@ -15,6 +15,15 @@ type PredictionResult = {
   model_predictions: Record<string, string>
   entities: string[]
   topic: string
+  key_terms: string[]
+  scraped_content: string
+  related_articles: Array<{
+    title: string
+    url: string
+    source: string
+    credibility_score: number
+    snippet: string
+  }>
 }
 
 type HistoryItem = {
@@ -36,6 +45,8 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [error, setError] = useState('')
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [autoAnalyzing, setAutoAnalyzing] = useState(false)
+  const [analyzedText, setAnalyzedText] = useState('')
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -47,7 +58,7 @@ export default function Home() {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/history?limit=20`)
       if (res.ok) {
@@ -57,14 +68,56 @@ export default function Home() {
     } catch (e) {
       console.error('Failed to fetch history')
     }
-  }
+  }, [API_URL])
 
   useEffect(() => {
-    fetchHistory()
-  }, [])
+    let cancelled = false
+    fetch(`${API_URL}/history?limit=20`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!cancelled && data) setHistory(data.history || [])
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [API_URL])
+
+  useEffect(() => {
+    if (!text.trim() && !url.trim()) return
+    if (text === analyzedText) return
+    
+    const timer = setTimeout(async () => {
+      let cancelled = false
+      setAutoAnalyzing(true)
+      try {
+        const response = await fetch(`${API_URL}/predict`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text.substring(0, 5000), title, url, source }),
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (!cancelled) {
+            setResult(data)
+            setAnalyzedText(text)
+            fetchHistory()
+          }
+        }
+      } catch (e) {
+        console.error('Auto-analyze failed:', e)
+      } finally {
+        if (!cancelled) setAutoAnalyzing(false)
+      }
+    }, 1500)
+    
+    return () => clearTimeout(timer)
+  }, [text, url, title, source, API_URL, fetchHistory, analyzedText])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!text.trim() && !url.trim()) {
+      setError('Please enter article text or a URL to analyze.')
+      return
+    }
     setLoading(true)
     setError('')
     setResult(null)
@@ -106,108 +159,115 @@ export default function Home() {
     }
   }
 
+  const downloadPDF = async () => {
+    if (!result) return
+    try {
+      const response = await fetch(`${API_URL}/pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title || 'Untitled',
+          text: text,
+          source: source,
+          prediction: result.prediction,
+          confidence: result.confidence,
+          risk_level: result.risk_level,
+          explanation: result.explanation,
+          entities: result.entities,
+          topic: result.topic,
+          key_terms: result.key_terms
+        }),
+      })
+      if (!response.ok) throw new Error('PDF generation failed')
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'newsguard-report.pdf'
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (e) {
+      console.error('PDF download failed:', e)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-slate-100 relative">
-      {/* Code Background Image */}
-      <div className="fixed inset-0 -z-20">
-        <img
-          src="/images/code-background.svg"
-          alt="Code background"
-          className="h-full w-full object-cover opacity-40"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0f]/90 via-[#0a0a0f]/80 to-slate-900/90" />
+    <div className="min-h-screen bg-[#06060a] text-slate-100 relative">
+      {/* Premium Dark Background */}
+      <div className="fixed inset-0 -z-30">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#06060a] via-[#0c0a14] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(245,158,11,0.06)_0%,transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_80%,rgba(6,182,212,0.04)_0%,transparent_50%)]" />
       </div>
 
-      {/* Animated Background */}
+      {/* Grid Pattern */}
+      <div className="fixed inset-0 -z-20">
+        <div className="absolute inset-0 bg-grid opacity-15" />
+      </div>
+
+      {/* Ambient Orbs */}
       <div className="fixed inset-0 -z-10">
-         {/* Grid pattern */}
-         <div className="absolute inset-0 bg-grid opacity-20" />
-         
-         {/* Animated orbs - CYAN/BLUE only, NO PURPLE */}
-         <div className="absolute top-20 left-10 h-96 w-96 animate-float rounded-full bg-cyan-600/20 blur-3xl" />
-         <div className="absolute top-40 right-20 h-80 w-80 animate-float rounded-full bg-blue-600/15 blur-3xl" style={{ animationDelay: '2s' }} />
-         <div className="absolute bottom-20 left-1/3 h-72 w-72 animate-float rounded-full bg-teal-600/10 blur-3xl" style={{ animationDelay: '4s' }} />
-         <div className="absolute top-1/2 right-1/4 h-64 w-64 animate-float rounded-full bg-sky-600/10 blur-3xl" style={{ animationDelay: '1s' }} />
-         
-         {/* Floating particles */}
-         <div className="absolute inset-0">
-           {[...Array(20)].map((_, i) => (
-             <div
-               key={i}
-               className="absolute h-1 w-1 animate-pulse rounded-full bg-cyan-400/30"
-               style={{
-                 left: `${Math.random() * 100}%`,
-                 top: `${Math.random() * 100}%`,
-                 animationDelay: `${Math.random() * 5}s`,
-                 animationDuration: `${3 + Math.random() * 4}s`
-               }}
-             />
-           ))}
-         </div>
-       </div>
+        <div className="absolute top-20 left-10 h-96 w-96 animate-float rounded-full bg-amber-500/15 blur-3xl" />
+        <div className="absolute top-40 right-20 h-80 w-80 animate-float rounded-full bg-cyan-600/10 blur-3xl" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-20 left-1/3 h-72 w-72 animate-float rounded-full bg-amber-400/8 blur-3xl" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/2 right-1/4 h-64 w-64 animate-float rounded-full bg-cyan-500/8 blur-3xl" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/3 right-10 h-80 w-80 animate-float rounded-full bg-violet-500/5 blur-3xl" style={{ animationDelay: '3s' }} />
 
-       {/* Mouse follower - CYAN instead of purple */}
-       <div
-         className="fixed pointer-events-none z-0 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-3xl transition-all duration-1000 ease-out"
-         style={{
-           left: mousePosition.x,
-           top: mousePosition.y,
-         }}
-       />
+        <div className="absolute inset-0">
+          {[...Array(30)].map((_, i) => {
+            const seed = i * 137.508
+            const left = (seed % 100)
+            const top = ((seed * 7.3) % 100)
+            const delay = (seed % 5)
+            const duration = 3 + (seed % 4)
+            return (
+              <div
+                key={i}
+                className="absolute h-1 w-1 animate-pulse rounded-full bg-amber-400/25"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  animationDelay: `${delay}s`,
+                  animationDuration: `${duration}s`
+                }}
+              />
+            )
+          })}
+        </div>
+      </div>
 
-       {/* Header */}
-       <header className="relative z-50 border-b border-slate-800/30 glass">
-         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-           <a href="/" className="flex items-center gap-3 group">
-             <div className="relative flex h-12 w-12 items-center justify-center">
-               <div className="absolute inset-0 animate-ping rounded-full bg-cyan-500/30" />
-               <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 shadow-lg shadow-cyan-500/30 transition-transform duration-300 group-hover:scale-110">
-                 <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                 </svg>
-               </div>
-             </div>
-             <div>
-               <h1 className="text-xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
-                 NewsGuard AI
-               </h1>
-               <p className="text-xs text-slate-400">Multi-Signal Detection</p>
-             </div>
-           </a>
-           <nav className="hidden gap-8 text-sm font-medium text-slate-300 md:flex">
-             <a href="#detector" className="group relative transition hover:text-white">
-               Detector
-               <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all group-hover:w-full" />
-             </a>
-             <a href="#how-it-works" className="group relative transition hover:text-white">
-               How It Works
-               <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all group-hover:w-full" />
-             </a>
-             <a href="/about" className="group relative transition hover:text-white">
-               About
-               <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all group-hover:w-full" />
-             </a>
-             <a href="/history" className="group relative transition hover:text-white">
-               History
-               <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all group-hover:w-full" />
-             </a>
-           </nav>
-         </div>
-       </header>
+      {/* Mouse Follower */}
+      <div
+        className="fixed pointer-events-none z-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/5 blur-3xl transition-all duration-1000 ease-out"
+        style={{
+          left: mousePosition.x,
+          top: mousePosition.y,
+        }}
+      />
 
       {/* Hero */}
-      <section className="relative z-10 border-b border-slate-800/30">
-        <div className="mx-auto max-w-7xl px-6 py-24 text-center">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-950/20 px-5 py-2.5 text-sm text-blue-300 backdrop-blur-sm animate-fade-in-up">
+       <section className="relative z-10 border-b border-slate-800/30">
+         <div className="mx-auto max-w-7xl px-6 py-16 md:py-24 text-center">
+           {/* Hero Icon Badge */}
+           <div className="mx-auto mb-8 flex justify-center">
+             <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30">
+               <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+               </svg>
+             </div>
+           </div>
+           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/20 px-5 py-2.5 text-sm text-emerald-300 backdrop-blur-sm animate-fade-in-up">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
             </span>
             Powered by BERT + Multi-Signal Analysis
           </div>
           <h2 className="text-5xl font-bold tracking-tight text-white md:text-6xl lg:text-7xl animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             Verify News with{' '}
-            <span className="gradient-text-blue animate-gradient">
+            <span className="gradient-text-emerald animate-gradient">
               AI Precision
             </span>
           </h2>
@@ -218,7 +278,7 @@ export default function Home() {
           <div className="mt-12 flex justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
             <a
               href="#detector"
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-8 py-4 font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-105"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-4 font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-2">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -243,9 +303,9 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 py-24">
           <div className="grid gap-8 lg:grid-cols-2">
             {/* Input Card */}
-            <div className="group rounded-2xl glass p-8 shadow-2xl transition-all duration-300 hover:border-blue-500/30 card-hover">
+            <div className="group rounded-2xl glass p-8 shadow-2xl transition-all duration-300 hover:border-emerald-500/30 card-hover">
               <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10 text-blue-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/10 text-emerald-400">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
@@ -262,7 +322,7 @@ export default function Home() {
                     id="url"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-3 text-slate-100 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-3 text-slate-100 outline-none transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     placeholder="https://example.com/news/article"
                   />
                 </div>
@@ -276,7 +336,7 @@ export default function Home() {
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-3 text-slate-100 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-3 text-slate-100 outline-none transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     placeholder="Enter article title..."
                   />
                 </div>
@@ -290,7 +350,7 @@ export default function Home() {
                     id="source"
                     value={source}
                     onChange={(e) => setSource(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-3 text-slate-100 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-3 text-slate-100 outline-none transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     placeholder="e.g. Reuters, BBC, blog name..."
                   />
                 </div>
@@ -304,15 +364,15 @@ export default function Home() {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     rows={10}
-                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-3 text-slate-100 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none"
+                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-3 text-slate-100 outline-none transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 resize-none"
                     placeholder="Paste the full article text here..."
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={loading || (!text.trim() && !url.trim())}
-                  className="btn-primary w-full overflow-hidden rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 font-semibold text-white shadow-lg shadow-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50 hover:shadow-xl hover:shadow-blue-500/40"
+                  disabled={loading}
+                  className="btn-primary w-full overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 font-semibold text-white shadow-lg shadow-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-50 hover:shadow-xl hover:shadow-emerald-500/40"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {loading ? (
@@ -371,13 +431,21 @@ export default function Home() {
                     </p>
                   </div>
 
+                  {/* Auto-analyze indicator */}
+                  {autoAnalyzing && (
+                    <div className="flex items-center gap-2 text-xs text-cyan-400">
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
+                      Auto-analyzing...
+                    </div>
+                  )}
+
                   {/* Scores */}
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 text-center transition-all duration-300 hover:border-blue-500/30 hover:scale-105">
+                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 text-center transition-all duration-300 hover:border-emerald-500/30 hover:scale-105">
                       <p className="text-xs text-slate-400">BERT Score</p>
                       <p className="text-xl font-bold text-white">{(result.bert_score * 100).toFixed(0)}%</p>
                       <div className="mt-2 h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                        <div className="h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-1000" style={{ width: `${result.bert_score * 100}%` }} />
+                        <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000" style={{ width: `${result.bert_score * 100}%` }} />
                       </div>
                     </div>
                     <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 text-center transition-all duration-300 hover:border-emerald-500/30 hover:scale-105">
@@ -387,22 +455,22 @@ export default function Home() {
                         <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000" style={{ width: `${result.source_score * 100}%` }} />
                       </div>
                     </div>
-                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 text-center transition-all duration-300 hover:border-cyan-500/30 hover:scale-105">
+                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 text-center transition-all duration-300 hover:border-emerald-500/30 hover:scale-105">
                       <p className="text-xs text-slate-400">Heuristic Score</p>
                       <p className="text-xl font-bold text-white">{(result.heuristic_score * 100).toFixed(0)}%</p>
                       <div className="mt-2 h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                        <div className="h-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000" style={{ width: `${result.heuristic_score * 100}%` }} />
+                        <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-1000" style={{ width: `${result.heuristic_score * 100}%` }} />
                       </div>
                     </div>
                   </div>
 
                   {/* Topic & Entities */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 transition hover:border-blue-500/20">
+                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 transition hover:border-emerald-500/20">
                       <p className="text-xs text-slate-400">Detected Topic</p>
                       <p className="mt-1 text-sm font-semibold text-white">{result.topic}</p>
                     </div>
-                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 transition hover:border-cyan-500/20">
+                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4 transition hover:border-emerald-500/20">
                       <p className="text-xs text-slate-400">Entities Detected</p>
                       <p className="mt-1 text-sm font-semibold text-white">
                         {result.entities.length > 0 ? result.entities.slice(0, 3).join(', ') : 'None detected'}
@@ -410,22 +478,79 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* Key Terms */}
+                  {result.key_terms && result.key_terms.length > 0 && (
+                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Key Terms Found
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {result.key_terms.slice(0, 10).map((term, idx) => (
+                          <span key={idx} className="rounded-lg bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300 border border-emerald-500/20">
+                            {term}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Explanation */}
                   <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4">
                     <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Analysis Breakdown
+                      Why This Result?
                     </p>
                     <ul className="space-y-2">
                       {result.explanation.map((item, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-                          <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                          <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.959 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                           </svg>
                           {item}
                         </li>
                       ))}
                     </ul>
                   </div>
+
+                  {/* Related Articles */}
+                  {result.related_articles && result.related_articles.length > 0 && (
+                    <div className="rounded-xl border border-slate-700/30 bg-slate-950/30 p-4">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Related Articles for Cross-Reference
+                      </p>
+                      <div className="space-y-3">
+                        {result.related_articles.slice(0, 5).map((article, idx) => (
+                          <a key={idx} href={article.url} target="_blank" rel="noopener noreferrer"
+                             className="flex items-start gap-3 rounded-lg border border-slate-700/30 p-3 transition hover:border-emerald-500/30 hover:bg-slate-800/20">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-white">{article.title}</p>
+                              <p className="mt-1 text-xs text-slate-400">{article.snippet}</p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-xs text-slate-500">{article.source}</span>
+                                <span className={`text-xs font-medium ${article.credibility_score >= 0.8 ? 'text-emerald-400' : article.credibility_score >= 0.5 ? 'text-yellow-400' : 'text-rose-400'}`}>
+                                  {Math.round(article.credibility_score * 100)}% credible
+                                </span>
+                              </div>
+                            </div>
+                            <svg className="h-4 w-4 flex-shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-9-3.75L9 6m0 0l3-3m-3 3v9" />
+                            </svg>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Download PDF */}
+                  <button
+                    type="button"
+                    onClick={downloadPDF}
+                    className="w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-6 py-3 font-semibold text-slate-200 transition hover:border-emerald-500/30 hover:bg-slate-800/30 flex items-center justify-center gap-2"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.25a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5" />
+                    </svg>
+                    Download PDF Report
+                  </button>
                 </div>
               )}
             </div>
@@ -529,7 +654,7 @@ export default function Home() {
                   {item.step}
                 </div>
                 <div className="relative z-10">
-                  <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
+                  <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-400">
                     {React.createElement(item.icon, { className: "h-7 w-7" })}
                   </div>
                   <h4 className="mb-3 text-xl font-semibold text-white">{item.title}</h4>
@@ -550,7 +675,7 @@ export default function Home() {
           </div>
           <div className="grid gap-8 md:grid-cols-3">
             <div className="group rounded-2xl glass p-8 transition-all duration-300 hover:scale-105 card-hover">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400 transition-colors group-hover:bg-blue-600/20">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-400 transition-colors group-hover:bg-emerald-600/20">
                 <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
                 </svg>
@@ -576,7 +701,7 @@ export default function Home() {
               </p>
             </div>
             <div className="group rounded-2xl glass p-8 transition-all duration-300 hover:scale-105 card-hover">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-600/10 text-cyan-400 transition-colors group-hover:bg-cyan-600/20">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-600/10 text-cyan-400 transition-colors group-hover:bg-emerald-600/20">
                 <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.502.037-.963.134-1.383.299a2.25 2.25 0 00-1.591.659L5 14.5m0 0L2.25 12.75M5 14.5h13.5m0 0l3.75-3.75M18.75 14.5H5.25" />
                 </svg>
@@ -597,7 +722,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 py-12">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <a href="/" className="flex items-center gap-3 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 shadow-lg shadow-cyan-500/30 transition-transform duration-300 group-hover:scale-110">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg shadow-emerald-500/30 transition-transform duration-300 group-hover:scale-110">
                 <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>

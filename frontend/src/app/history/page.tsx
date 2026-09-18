@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Navigation } from '../components/navigation'
+import { Navigation } from '../../components/navigation'
 import { Clock } from 'lucide-react'
 
 type HistoryItem = {
@@ -11,7 +11,7 @@ type HistoryItem = {
   created_at: string
 }
 
-async function getHistory() {
+async function getHistory(): Promise<HistoryItem[]> {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
   try {
     const res = await fetch(`${API_URL}/history?limit=100`, { cache: 'no-store' })
@@ -38,7 +38,8 @@ export default async function HistoryPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 relative">
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
+        <img src="/history-bg.jpg" alt="" className="h-full w-full object-cover opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95" />
         <div className="absolute top-0 right-1/4 h-96 w-96 animate-pulse rounded-full bg-purple-600/10 blur-3xl" />
         <div className="absolute bottom-0 left-1/4 h-96 w-96 animate-pulse rounded-full bg-emerald-600/10 blur-3xl" style={{ animationDelay: '1.5s' }} />
       </div>
@@ -46,9 +47,11 @@ export default async function HistoryPage() {
       <Navigation />
 
       <main className="relative z-10">
-        <section className="border-b border-slate-800/50">
-          <div className="mx-auto max-w-7xl px-6 py-20">
+        <section className="border-b border-slate-800/50 relative overflow-hidden">
+          <img src="/history-bg.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-10" />
+          <div className="relative mx-auto max-w-7xl px-6 py-20">
             <div className="mb-16 text-center">
+              <img src="/logo-icon.png" alt="NewsGuard AI" className="mx-auto mb-4 h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 p-1.5 shadow-lg shadow-cyan-500/20" />
               <h1 className="text-5xl font-bold tracking-tight text-white md:text-6xl">
                 Analysis <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">History</span>
               </h1>

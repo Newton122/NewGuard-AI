@@ -1,11 +1,12 @@
 import Link from 'next/link'
-import { Navigation } from '../components/navigation'
+import { Navigation } from '../../components/navigation'
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 relative">
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
+        <img src="/about-bg.jpg" alt="" className="h-full w-full object-cover opacity-25" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95" />
         <div className="absolute top-0 left-1/4 h-96 w-96 animate-pulse rounded-full bg-blue-600/10 blur-3xl" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 animate-pulse rounded-full bg-emerald-600/10 blur-3xl" style={{ animationDelay: '1s' }} />
       </div>
@@ -13,8 +14,10 @@ export default function AboutPage() {
       <Navigation />
 
       <main className="relative z-10">
-        <section className="border-b border-slate-800/50">
-          <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+        <section className="border-b border-slate-800/50 relative overflow-hidden">
+          <img src="/about-bg.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-10" />
+          <div className="relative mx-auto max-w-4xl px-6 py-20 text-center">
+            <img src="/logo-icon.png" alt="NewsGuard AI" className="mx-auto mb-6 h-16 w-16 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 p-2 shadow-lg shadow-blue-500/30" />
             <h1 className="text-5xl font-bold tracking-tight text-white md:text-6xl">
               About <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">NewsGuard AI</span>
             </h1>
